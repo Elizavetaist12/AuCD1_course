@@ -1,0 +1,116 @@
+'''
+Лабораторная работа №7
+Требуется для своего варианта второй части л.р. №6 (усложненной программы) разработать реализацию с использованием графического интерфейса. 
+Допускается использовать любую графическую библиотеку питона.
+Рекомендуется использовать внутреннюю библиотеку питона  tkinter.
+В программе должны быть реализованы минимум одно окно ввода, одно окно вывода (со скролингом), одно текстовое поле, одна кнопка.
+2 часть – усложнить написанную программу, введя по своему усмотрению в условие минимум одно ограничение на характеристики объектов
+(которое будет сокращать количество переборов) и целевую функцию для нахождения оптимального решения.
+Вариант 20
+Дан одномерный массив.
+Сформировать все возможные варианты данного массива путем замены положительных элементов на четных местах на нули.
+'''
+import itertools
+import tkinter as tk
+
+
+# Функция для генерации всех возможных перестановок исходного массива с использованием itertools 
+def gen_algorithm(arr, index=0, variant=None, variants=None):
+    if variant is None:
+        variant = arr.copy()
+    if variants is None:
+        variants = set()
+    if index == len(arr):
+        variants.add(tuple(variant))
+        return
+    gen_algorithm(arr, index + 1, variant, variants)
+    if index < len(arr) // 2:  # меняем значения только в первой половине списка 
+        if index % 2 != 1 and variant[index] > 0:
+            variant[index] = 0
+            gen_algorithm(arr, index + 1, variant, variants)
+            variant[index] = arr[index]
+    variants.discard(tuple(arr))
+    return list(variants)
+
+
+# Функция для нахождения конфигурации с максимальной суммой элементов по модулю 5 
+def find_config(variants):
+    # Инициализация максимальной суммы 
+    max_sum = 0
+
+    # Инициализация оптимальной конфигурации 
+    config = None
+
+    for perm in variants:
+        # Вычисление суммы элементов по модулю 5 для текущей перестановки 
+        current_sum = sum(abs(x) for x in perm) % 5
+        if current_sum > max_sum:
+            # Обновление максимальной суммы 
+            max_sum = current_sum
+            # Обновление оптимальной конфигурации 
+            config = perm
+    return config, max_sum
+
+
+# Функция для главного процесса генерации перестановок и вывода результата 
+def main_itertools(arr):
+    variants = gen_algorithm(arr)
+    return variants
+
+
+# Функция, вызываемая при нажатии кнопки "Подтвердить" 
+def get_array_input(window, arr_entry, text_box, result_label):
+    # Получение введенных пользователем элементов массива 
+    arr = arr_entry.get().split()
+    # Преобразование ввода в список чисел 
+    arr = [int(x) for x in arr if x.strip()]
+    # Генерация всех возможных перестановок с заданными элементами 
+    variants = main_itertools(arr)
+    # Очистка текстового поля перед выводом новых результатов 
+    text_box.delete('1.0', tk.END)
+    # Вывод всех перестановок в текстовое поле 
+    for variant in variants:
+        text_box.insert(tk.END, f"{variant}\n")
+    config, max_sum = find_config(variants)
+    # Нахождение конфигурации с максимальной суммой элементов по модулю 5 и вывод её 
+    text_box.insert(tk.END, f"Конфигурация, которая дает максимальную сумму элементов по модулю 5: {config}")
+
+
+def main():
+    # Создание главного окна 
+    window = tk.Tk()
+    window.title("Формирование массивов")
+
+    # Метка для ввода пользовательских данных
+    label = tk.Label(window, text="Введите элементы списка через пробел:")
+    label.grid(row=0, column=0, padx=10, pady=5)
+
+    # Поле для ввода пользовательских данных 
+    arr_entry = tk.Entry(window)
+    arr_entry.grid(row=0, column=1, padx=10, pady=5)
+
+    # Кнопка для подтверждения введенных данных 
+    button_submit = tk.Button(window, text="Подтвердить",
+                              command=lambda: get_array_input(window, arr_entry, text_box, result_label))
+    button_submit.grid(row=1, column=0, columnspan=2, pady=10)
+
+    # Текстовое поле для вывода результатов 
+    text_box = tk.Text(window, wrap=tk.WORD)
+    text_box.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
+
+    # Скроллбар для текстового поля 
+    scrollbar = tk.Scrollbar(window, command=text_box.yview)
+    scrollbar.grid(row=2, column=2, sticky='nsew')
+    text_box.config(yscrollcommand=scrollbar.set)
+
+    # Метка для вывода результата целевой функции 
+    result_label = tk.Label(window, text="")
+    result_label.grid(row=3, column=0, columnspan=2)
+
+    window.eval(f'tk::PlaceWindow . center')
+    # Запуск основного цикла обработки событий 
+    window.mainloop()
+
+
+if __name__ == "__main__":
+    main()
