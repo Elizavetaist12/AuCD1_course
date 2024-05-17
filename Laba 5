@@ -1,0 +1,109 @@
+'''
+Лабораторная работа №5
+Задана рекуррентная функция. Область определения функции – натуральные числа.
+Написать программу сравнительного вычисления данной функции рекурсивно и итерационно (значение, время).
+Определить (смоделировать) границы применимости рекурсивного и итерационного подхода.
+Результаты сравнительного исследования времени вычисления представить в табличной и графической форме в виде отчета по лабораторной работе.
+Вариант 20
+F(1) = 1,
+F(n) = (-1)^n*(F(n–1) /(2n)! - (3*n - 2)), при четных n > 1,
+F(n) =(n+1)! при нечетных n > 1
+'''
+
+import timeit
+import matplotlib.pyplot as plt
+
+factorial = 1
+
+
+def factorial(n):
+    global value
+    value = n * value
+    return value
+
+
+# Функция для рекурсивного вычисления факторилала
+
+
+def rec_factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    else:
+        return rec_factorial(n - 1) * n
+
+
+# Функция для итеративного вычисления факториала
+
+
+def iter_factorial(n):
+    x = 1
+    for i in range(2, n + 1):
+        x *= i
+    return x
+
+sign = -1
+result = 1
+
+
+# Функция для рекурсивного вычисления
+def rec_F(n):
+    global sign, result
+    if n == 1:
+        return 1
+    elif n > 1 and n % 2 == 0:
+        sign *= -1
+        result = sign * ((rec_F(n - 1) / rec_factorial(2 * n)) - (3 * n - 2))
+        return result
+    elif n > 1 and n % 2 != 0:
+        result = rec_factorial(n)
+        return result
+
+# Функция для итеративного вычисления
+answer = 1
+
+def iter_F(n):
+    global sign, answer
+    F = [0] * (n + 1)
+    F[1] = 1
+    for i in range(2, n + 1, 2):
+        sign *= - 1
+        F[i] = sign * ((F[n - 1] / iter_factorial(2 * n)) - (3 * n - 2))
+        answer = F[i]
+    for i in range(3, n + 1, 2):
+        F[i] = iter_factorial(n)
+        answer = F[i]
+    return F[n]
+
+
+value = int(input("Введите число: "))
+
+# print("Рекурсия: ", rec_F(value))
+# print("Итерация: ", iter_F(value))
+
+# Таблица
+table = []
+
+rec_time = []
+iter_time = []
+for n in range(1, value):
+ rec_time = timeit.timeit(lambda: rec_F(n), number=1)
+ iter_time = timeit.timeit(lambda: iter_F(n), number=1)
+
+ table.append((n, rec_time, iter_time))
+
+print("+-" + "-" * 14 + "-+-" + "-" * 14 + "-+-" + "-" * 14 + "-+")
+print("| {:^14} | {:^14} | {:^14} |".format("n", "Recursive", "Iterative"))
+print("+-" + "-" * 14 + "-+-" + "-" * 14 + "-+-" + "-" * 14 + "-+")
+for row in table:
+ print("| {:^14} | {:^14.6f} | {:^14.6f} |".format(row[0], row[1], row[2]))
+print("+-" + "-" * 14 + "-+-" + "-" * 14 + "-+-" + "-" * 14 + "-+")
+
+# График
+plt.plot([row[0] for row in table], [row[1] for row in table], label='Рекурсия', marker='o')
+plt.plot([row[0] for row in table], [row[2] for row in table], label='Итерация', marker='o')
+plt.title('Сравнение времени Рекурсивного и Итерационного подхода')
+plt.xlabel('n')
+plt.ylabel('Время')
+plt.legend()
+plt.grid(True)
+plt.show()
