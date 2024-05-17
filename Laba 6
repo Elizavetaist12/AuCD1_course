@@ -1,0 +1,127 @@
+'''
+Лабораторная №6
+Задание состоит из двух частей.
+1 часть – написать программу в соответствии со своим вариантом задания.
+Написать 2 варианта формирования (алгоритмический и с помощью функций Питона), сравнив по времени их выполнение.
+2 часть – усложнить написанную программу, введя по своему усмотрению в условие минимум одно ограничение на характеристики объектов
+(которое будет сокращать количество переборов) и целевую функцию для нахождения оптимального решения.
+Вариант 20
+Дан одномерный массив.
+Сформировать все возможные варианты данного массива путем замены положительных элементов на четных местах на нули.
+'''
+from itertools import product
+import timeit
+
+# Функция питона
+
+def gen_itertools(arr):
+    variants = set()
+    n = len(arr)
+    for replace_indices in product([0, 1], repeat=n):
+        variant = arr.copy()
+        for i in range(n):
+            if replace_indices[i] == 1 and (i + 1) % 2 != 0 and variant[i] > 0:
+                variant[i] = 0
+        variants.add(tuple(variant))
+    variants.discard(tuple(arr))
+    return list(variants)
+
+# Алгоритмический подход
+
+def gen_algorithm(arr, index=0, variant=None, variants=None):
+    if variant is None:
+        variant = arr.copy()
+    if variants is None:
+        variants = set()
+    if index == len(arr):
+        variants.add(tuple(variant))
+        return
+    gen_algorithm(arr, index + 1, variant, variants)
+    if index % 2 != 1 and variant[index] > 0:
+        variant[index] = 0
+        gen_algorithm(arr, index + 1, variant, variants)
+        variant[index] = arr[index]
+    variants.discard(tuple(arr))
+    return list(variants)
+
+
+# Усложнения
+
+
+def gen_itertools_hard(arr):
+    variants = set()
+    n = len(arr)
+    for replace_indices in product([0, 1], repeat=n):
+        variant = arr.copy()
+        for i in range(n):
+            if i < n // 2:  # меняем значения только в первой половине массива
+                if replace_indices[i] == 1 and (i + 1) % 2 != 0 and variant[i] > 0:
+                    variant[i] = 0
+        variants.add(tuple(variant))
+    variants.discard(tuple(arr))  # Удаляем исходный список из вариантов
+    return list(variants)
+
+
+def gen_algorithm_hard(arr, index=0, variant=None, variants=None):
+    if variant is None:
+        variant = arr.copy()
+    if variants is None:
+        variants = set()
+    if index == len(arr):
+        variants.add(tuple(variant))
+        return
+    gen_algorithm_hard(arr, index + 1, variant, variants)
+    if index >= len(arr) // 2:  # меняем значения только во второй половине массива
+        if index % 2 != 1 and variant[index] > 0:
+            variant[index] = 0
+            gen_algorithm_hard(arr, index + 1, variant, variants)
+            variant[index] = arr[index]
+    variants.discard(tuple(arr))
+    return list(variants)
+
+
+# Целевая функция
+
+
+def find_config(variants):
+    max_sum = 0
+    config = None
+    for perm in variants:
+        current_sum = sum(abs(x) for x in perm) % 5
+        if current_sum > max_sum:
+            max_sum = current_sum
+            config = perm
+    return config
+
+
+def main_algorithm():
+    variants = gen_algorithm(arr)
+
+
+def main_itertools():
+    variants = gen_itertools(arr)
+
+
+arr = list(map(int, input("Введите числа через пробел: ").split()))
+variants = gen_algorithm(arr)
+print("Варианты замены алгоритмическим подходом:")
+for var in variants:
+    print(var)
+variants = gen_itertools(arr)
+print("Варианты замены с использованием функции питона:")
+for var in variants:
+    print(var)
+
+print("Время выполнения алгоритмического подхода:", timeit.timeit(main_algorithm, number=1000))
+print("Время выполнения функции питона:", timeit.timeit(main_itertools, number=1000))
+
+variants = gen_itertools_hard(arr)
+print("Варианты после усложнения (изменяется только первая половина массива):")
+for var in variants:
+    print(var)
+
+variants = gen_algorithm_hard(arr)
+print("Варианты после усложнения (изменяется только вторая половина массива):")
+for var in variants:
+    print(var)
+print(f"Конфигурация, которая дает максимальную сумму элементов по модулю 5: {find_config(variants)}")
