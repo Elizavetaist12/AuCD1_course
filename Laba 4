@@ -1,0 +1,133 @@
+'''Лабораторная работа №4
+С клавиатуры вводится два числа K и N. Квадратная матрица А(N,N), состоящая из 4-х равных по размерам подматриц,
+B,C,D,E заполняется случайным образом целыми числами в интервале [-10,10].
+Для отладки использовать не случайное заполнение, а целенаправленное. Вид матрицы А:
+E B
+C D
+Вариант 20
+20.	Формируется матрица F следующим образом: скопировать в нее А, и если в Е количество чисел, больших К
+в четных столбцах больше, чем произведение чисел в нечетных строках, то поменять местами С и Е симметрично,
+иначе С и В поменять местами несимметрично.
+При этом матрица А не меняется. После чего если определитель матрицы А больше суммы диагональных элементов матрицы F,
+то вычисляется выражение: A*A^T – K * F-1, иначе вычисляется выражение (A-1 +G-F^T)*K,
+где G-нижняя треугольная матрица, полученная из А.
+Выводятся по мере формирования А, F и все матричные операции последовательно.
+'''
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+k = int(input("Введите число k: "))
+
+while True:
+    n = int(input("Введите n (размерность матрицы А): "))
+    if n >= 6 and n % 2 == 0:
+        break
+    else:
+        print("Введите размерность матрицы А, так чтобы размер матрицы (n) больше 6 и (n) четное число: ")
+print()
+
+a = np.random.randint(-10, 11, (n, n))
+
+e = a[:n//2, :n//2]
+b = a[:n//2, n//2:]
+d = a[n//2:, :n//2]
+c = a[n//2:, n//2:]
+print("Матрица А:\n", a)
+print()
+
+count_E = 0
+for i in range(len(e)):
+    for j in range(0, len(e), 2):
+        if e[i][j] > k:
+            count_E += 1
+print("Количество чисел, больших k в четных столбцах:", count_E)
+
+product_E = 1
+for i in range(1, len(e), 2):
+    for j in range(len(e)):
+        product_E *= e[i][j]
+print("Произведение чисел в нечетных строках: ", product_E)
+print()
+
+f = a.copy()
+q = c.copy()
+r = e.copy()
+
+if count_E > product_E:
+    for i in range(len(f)):
+        for j in range(len(f)):
+            for i in range(len(c)):
+                for j in range(len(c)):
+                     if i != j:
+                        c[i][j] = r[j][i]
+                     else:
+                        c[i][j] = r[n // 2 - i - 1][n // 2 - j - 1]
+            for i in range(len(e)):
+                for j in range(len(e)):
+                    if i != j:
+                        e[i][j] = q[j][i]
+                    else:
+                        e[i][j] = q[n // 2 - i - 1][n // 2 - j - 1]
+    for i in range(n // 2):
+        for j in range(n // 2):
+            f[i][j] = e[i][j]
+    for i in range(n // 2, n):
+        for j in range(n // 2):
+            f[i][j] = d[i - n // 2][j]
+    for i in range(n // 2):
+        for j in range(n // 2, n):
+            f[i][j] = b[i][j - n // 2]
+    for i in range(n // 2, n):
+        for j in range(n // 2, n):
+            f[i][j] = c[i - n // 2][j - n // 2]
+    print("Матрица F, созданная по условию:\n", f)
+    print()
+else:
+    w = f.copy()
+    f[:n // 2, n // 2:], f[n // 2:, n // 2:] = f[n // 2:, n // 2:], w[:n // 2, n // 2:]
+    print("Матрица F, созданная по условию:\n", f)
+    print()
+
+det_a = np.linalg.det(a)
+print("Определитель матрицы A:\n", det_a)
+print()
+
+sum_diag_f = np.trace(f)
+print("Сумма диагоналей матрицы F:\n", sum_diag_f)
+print()
+
+g = np.tril(a)
+print("Нижняя треугольная матрица G:\n", g)
+print()
+
+if det_a > sum_diag_f:
+    answer = (a * np.transpose(a)) - (k * np.linalg.inv(f))
+else:
+    answer = ((np.linalg.inv(a) + g) - np.transpose(f) * k)
+print("Результат вычислений:\n", answer)
+print()
+
+for i in range(len(f)):
+    plt.plot(f[i], label=f'Row{i+1}')
+plt.legend()
+plt.title('По строкам')
+plt.xlabel('Строки')
+plt.ylabel('Значения')
+plt.grid(True)
+plt.show()
+
+for j in range(len(f)):
+    plt.plot(f[:, j], label=f'Col{j+1}')
+plt.title('По столбцам')
+plt.xlabel('Столбцы')
+plt.ylabel('Значения')
+plt.grid(True)
+plt.legend()
+plt.show()
+
+plt.plot(product_E, marker='s')
+plt.title("Произведение чисел в четных столбцах")
+plt.ylabel('Произведение чисел')
+plt.grid(True)
+plt.show()
